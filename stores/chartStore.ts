@@ -1,25 +1,14 @@
 import { defineStore } from 'pinia'
+import type { VolumeData, CandlestickData } from '~/types'
 
-interface CandlestickData {
-  open: number
-  high: number
-  low: number
-  close: number
-  time: number
-}
 
-interface VolumeData {
-  time: number
-  value: number
-  color: string
-}
 
 export const useChartStore = defineStore('chart', () => {
+  const isLoading = ref<boolean>(false)
+  const error = ref<string | null>(null)
   const apiUrl = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT'
   const chartData = ref<CandlestickData[]>([])
   const volumeData = ref<VolumeData[]>([])
-  const isLoading = ref<boolean>(false)
-  const error = ref<string | null>(null)
   const colorUpVolume = 'rgba(15, 118, 110, 0.5)'
   const colorDownVolume = 'rgba(190, 18, 60, 0.5)'
 

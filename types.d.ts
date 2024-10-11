@@ -1,3 +1,13 @@
-declare module 'trading-vue-js'
-declare module 'tvjs-overlays'
-declare module 'tvjs-xp'
+export interface CandlestickData {
+  open: number
+  high: number
+  low: number
+  close: number
+  time: number
+}
+
+export interface VolumeData {
+  time: number
+  value: number
+  color: string
+}

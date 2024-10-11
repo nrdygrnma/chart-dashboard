@@ -1,9 +1,9 @@
 <template>
-  <div v-if="chartStore.isLoading">Loading data...</div>
-  <div v-if="chartStore.error">{{ chartStore.error }}</div>
+  <div v-if="isLoading">Loading data...</div>
+  <div v-if="error">{{ error }}</div>
 
   <div
-    v-if="!chartStore.isLoading && !chartStore.error"
+    v-if="!isLoading && !error"
     class="h-[80%] bg-slate-600"
     ref="chartContainer"
   ></div>
@@ -14,10 +14,15 @@ import type { ChartOptions } from 'lightweight-charts'
 
 const { $charts } = useNuxtApp()
 const chartStore = useChartStore()
+const { fetchBinanceData, fetchLatestBinanceData } = chartStore
+const { chartOptions, chartData, volumeData, isLoading, error } =
+  storeToRefs(chartStore)
+
 const chart = ref()
-const candlestickSeries = ref()
 const volumeSeries = ref()
+const candlestickSeries = ref()
 const chartContainer = ref<HTMLElement>()
+let updateInterval: number = 1000
 
 const candleStickOptions = {
   upColor: '#0f766e',
@@ -28,51 +33,45 @@ const candleStickOptions = {
   wickDownColor: '#be123c'
 }
 
-let updateInterval: number | null = null
+const setupSeries = () => {
+  candlestickSeries.value = chart.value.addCandlestickSeries(candleStickOptions)
+  candlestickSeries.value.setData(chartData.value)
+  candlestickSeries.value.priceScale().applyOptions({
+    scaleMargins: {
+      top: 0.1,
+      bottom: 0.2
+    }
+  })
+  volumeSeries.value = chart.value.addHistogramSeries({
+    priceFormat: { type: 'volume' },
+    priceScaleId: ''
+  })
+  volumeSeries.value
+    .priceScale()
+    .applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } })
+  volumeSeries.value.setData(volumeData.value)
+}
 
 onMounted(async () => {
-  await chartStore.fetchBinanceData()
-
+  await fetchBinanceData()
   if (chartContainer.value) {
     chart.value = $charts.createChart(
       chartContainer.value,
-      chartStore.chartOptions as ChartOptions
+      chartOptions.value as ChartOptions
     )
-
-    candlestickSeries.value =
-      chart.value.addCandlestickSeries(candleStickOptions)
-    candlestickSeries.value.setData(chartStore.chartData)
-
-    candlestickSeries.value.priceScale().applyOptions({
-      scaleMargins: { top: 0.1, bottom: 0.2 }
-    })
-
-    volumeSeries.value = chart.value.addHistogramSeries({
-      priceFormat: {
-        type: 'volume'
-      },
-      priceScaleId: ''
-    })
-
-    volumeSeries.value.priceScale().applyOptions({
-      scaleMargins: {
-        top: 0.8,
-        bottom: 0
-      }
-    })
-
-    volumeSeries.value.setData(chartStore.volumeData)
-
+    setupSeries()
     chart.value.timeScale().fitContent()
-
     updateInterval = window.setInterval(async () => {
-      const newCandlestickData = await chartStore.fetchLatestBinanceData()
-      if (newCandlestickData) {
-        candlestickSeries.value.update(newCandlestickData.candlestick)
-        volumeSeries.value.update(newCandlestickData.volume)
+      try {
+        const newCandlestickData = await fetchLatestBinanceData()
+        if (newCandlestickData) {
+          candlestickSeries.value.update(newCandlestickData.candlestick)
+          volumeSeries.value.update(newCandlestickData.volume)
+        }
+      } catch (err) {
+        console.error('Error fetching latest data:', err)
       }
-    }, 1000)
-
+    }, updateInterval)
     document.getElementById('tv-attr-logo')?.remove()
   }
 })
