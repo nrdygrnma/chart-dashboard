@@ -18,5 +18,8 @@
     "pinia": "^2.2.4",
     "vue": "latest",
     "vue-router": "latest"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
   }
 }
