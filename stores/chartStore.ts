@@ -1,28 +1,26 @@
 import { defineStore } from "pinia";
 import { volumeColors } from "~/config/chartStyles";
-import type { CandlestickData, VolumeData } from "~/types";
+import type { CandlestickData, SymbolData, VolumeData } from "~/types";
 
 export const useChartStore = defineStore("chart", () => {
   const isLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
   const chartData = ref<CandlestickData[]>([]);
   const volumeData = ref<VolumeData[]>([]);
-  const symbols = ref<string[]>([]);
   const symbol = ref<string>("BTCUSDT");
   const interval = ref<string>("1h");
   const apiUrl = "/api/binance";
 
-  const fetchSymbols = async () => {
-    try {
-      const response: any[] = await $fetch(
-        "https://api3.binance.com/api/v3/ticker/price",
-      );
-      symbols.value = response.map((ticker: any) => ticker.symbol);
-    } catch (err) {
-      console.error("Error fetching symbols from Binance:", err);
-      error.value = "Failed to fetch symbols";
-    }
-  };
+  const symbols = ref<SymbolData[]>([
+    {
+      value: "BTCUSDT",
+      display: "BTC/USDT",
+    },
+    {
+      value: "ETHUSDT",
+      display: "ETH/USDT",
+    },
+  ]);
 
   const fetchBinanceData = async () => {
     isLoading.value = true;
@@ -103,7 +101,6 @@ export const useChartStore = defineStore("chart", () => {
     symbols,
     interval,
     error,
-    fetchSymbols,
     fetchBinanceData,
     fetchLatestBinanceData,
   };

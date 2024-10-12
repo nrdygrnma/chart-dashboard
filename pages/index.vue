@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <h1 class="text-4xl text-slate-400 font-light">Chart Dashboard</h1>
-    <div class="h-screen mt-6">
+  <div class="h-full flex flex-col">
+    <h1 class="text-2xl text-slate-400">Gizmo Dash</h1>
+    <div class="flex flex-col h-full">
       <TradingviewChart />
     </div>
   </div>

@@ -2,30 +2,28 @@
   <div v-if="isLoading">Loading data...</div>
   <div v-if="error">{{ error }}</div>
 
-  <div v-if="!isLoading && !error">
-    <select v-model="symbol" class="py-1 px-2" @change="fetchBinanceData">
-      <option
-        v-for="sym in formattedSymbols"
-        :key="sym.value"
-        :value="sym.value"
-      >
-        {{ sym.label }}
-      </option>
-    </select>
+  <div class="h-full flex flex-col -mt-6">
+    <div v-if="!isLoading && !error" class="flex justify-end">
+      <select v-model="symbol" class="py-1 px-2" @change="fetchBinanceData">
+        <option v-for="sym in symbols" :key="sym.value" :value="sym.value">
+          {{ sym.display }}
+        </option>
+      </select>
 
-    <select v-model="interval" class="py-1 px-2" @change="fetchBinanceData">
-      <option value="1m">1 Minute</option>
-      <option value="1h">1 Hour</option>
-      <option value="1d">1 Day</option>
-      <option value="1w">1 Week</option>
-      <option value="1M">1 Month</option>
-    </select>
+      <select v-model="interval" class="py-1 px-2" @change="fetchBinanceData">
+        <option value="1m">1 Minute</option>
+        <option value="1h">1 Hour</option>
+        <option value="1d">1 Day</option>
+        <option value="1w">1 Week</option>
+        <option value="1M">1 Month</option>
+      </select>
+    </div>
+    <div
+      v-if="!isLoading && !error"
+      ref="chartContainer"
+      class="h-full bg-slate-600 mt-4"
+    ></div>
   </div>
-  <div
-    v-if="!isLoading && !error"
-    ref="chartContainer"
-    class="h-[80%] bg-slate-600 mt-4"
-  ></div>
 </template>
 
 <script lang="ts" setup>
@@ -43,7 +41,7 @@ import {
 
 const chartStore = useChartStore();
 
-const { fetchBinanceData, fetchLatestBinanceData, fetchSymbols } = chartStore;
+const { fetchBinanceData, fetchLatestBinanceData } = chartStore;
 const { chartData, volumeData, isLoading, error, symbol, symbols, interval } =
   storeToRefs(chartStore);
 
@@ -52,13 +50,6 @@ let updateInterval: number | null = 1000;
 const chartContainer = ref<HTMLElement>();
 const volumeSeries = ref<any>(null);
 const candlestickSeries = ref<any>(null);
-
-const formattedSymbols = computed(() =>
-  symbols.value.map((sym) => ({
-    value: sym,
-    label: `${sym.slice(0, 3)}/${sym.slice(3)}`,
-  })),
-);
 
 const setupChart = () => {
   if (
@@ -117,7 +108,6 @@ watch([symbol, interval], async () => {
 });
 
 onMounted(async () => {
-  await fetchSymbols();
   await fetchBinanceData();
   setupChart();
 

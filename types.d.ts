@@ -13,6 +13,6 @@ export interface VolumeData {
 }
 
 export interface SymbolData {
-  symbol: string;
-  price: string;
+  value: string;
+  display: string;
 }
