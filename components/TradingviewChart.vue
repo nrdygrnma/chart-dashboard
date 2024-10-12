@@ -3,12 +3,17 @@
   <div v-if="error">{{ error }}</div>
 
   <div v-if="!isLoading && !error">
-    <select v-model="symbol" @change="fetchBinanceData">
-      <option value="BTCUSDT">BTC/USDT</option>
-      <option value="ETHUSDT">ETH/USDT</option>
+    <select v-model="symbol" class="py-1 px-2" @change="fetchBinanceData">
+      <option
+        v-for="sym in formattedSymbols"
+        :key="sym.value"
+        :value="sym.value"
+      >
+        {{ sym.label }}
+      </option>
     </select>
 
-    <select v-model="interval" @change="fetchBinanceData">
+    <select v-model="interval" class="py-1 px-2" @change="fetchBinanceData">
       <option value="1m">1 Minute</option>
       <option value="1h">1 Hour</option>
       <option value="1d">1 Day</option>
@@ -38,8 +43,8 @@ import {
 
 const chartStore = useChartStore();
 
-const { fetchBinanceData, fetchLatestBinanceData } = chartStore;
-const { chartData, volumeData, isLoading, error, symbol, interval } =
+const { fetchBinanceData, fetchLatestBinanceData, fetchSymbols } = chartStore;
+const { chartData, volumeData, isLoading, error, symbol, symbols, interval } =
   storeToRefs(chartStore);
 
 const chart = ref<any>(null);
@@ -47,6 +52,13 @@ let updateInterval: number | null = 1000;
 const chartContainer = ref<HTMLElement>();
 const volumeSeries = ref<any>(null);
 const candlestickSeries = ref<any>(null);
+
+const formattedSymbols = computed(() =>
+  symbols.value.map((sym) => ({
+    value: sym,
+    label: `${sym.slice(0, 3)}/${sym.slice(3)}`,
+  })),
+);
 
 const setupChart = () => {
   if (
@@ -56,6 +68,7 @@ const setupChart = () => {
   )
     return;
 
+  console.log(chartData.value);
   chart.value = $charts.createChart(
     chartContainer.value,
     chartOptions as ChartOptions,
@@ -66,6 +79,7 @@ const setupChart = () => {
   candlestickSeries.value.setData(chartData.value);
 
   candlestickSeries.value.priceScale().applyOptions({
+    autoScale: true,
     scaleMargins: {
       top: scaleMargins.candlestick.top,
       bottom: scaleMargins.candlestick.bottom,
@@ -103,6 +117,7 @@ watch([symbol, interval], async () => {
 });
 
 onMounted(async () => {
+  await fetchSymbols();
   await fetchBinanceData();
   setupChart();
 

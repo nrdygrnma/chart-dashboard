@@ -7,9 +7,22 @@ export const useChartStore = defineStore("chart", () => {
   const error = ref<string | null>(null);
   const chartData = ref<CandlestickData[]>([]);
   const volumeData = ref<VolumeData[]>([]);
+  const symbols = ref<string[]>([]);
   const symbol = ref<string>("BTCUSDT");
   const interval = ref<string>("1h");
   const apiUrl = "/api/binance";
+
+  const fetchSymbols = async () => {
+    try {
+      const response: any[] = await $fetch(
+        "https://api3.binance.com/api/v3/ticker/price",
+      );
+      symbols.value = response.map((ticker: any) => ticker.symbol);
+    } catch (err) {
+      console.error("Error fetching symbols from Binance:", err);
+      error.value = "Failed to fetch symbols";
+    }
+  };
 
   const fetchBinanceData = async () => {
     isLoading.value = true;
@@ -87,8 +100,10 @@ export const useChartStore = defineStore("chart", () => {
     volumeData,
     isLoading,
     symbol,
+    symbols,
     interval,
     error,
+    fetchSymbols,
     fetchBinanceData,
     fetchLatestBinanceData,
   };
