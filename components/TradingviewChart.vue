@@ -17,6 +17,18 @@
         <option value="1w">1 Week</option>
         <option value="1M">1 Month</option>
       </select>
+
+      <Button
+        class="ml-2 hover:bg-pink-600 bg-pink-700"
+        @click="drawNewLineSeries()"
+        >Draw Lines
+      </Button>
+
+      <Button
+        class="ml-2 hover:bg-teal-600 bg-teal-700"
+        @click="resetAllLineSeries()"
+        >Clear Lines
+      </Button>
     </div>
 
     <div
@@ -51,6 +63,18 @@ let updateInterval: number | null = 1000;
 const chartContainer = ref<HTMLElement>();
 const volumeSeries = ref<any>(null);
 const candlestickSeries = ref<any>(null);
+const lineSeries = ref<any>();
+const lineSeriesList = ref<any[]>([]);
+
+const data1 = [
+  { value: 59000, time: 1728574080 },
+  { value: 63319, time: 1728746880 },
+];
+
+const data2 = [
+  { value: 62863, time: 1728302411 },
+  { value: 59318, time: 1728586811 },
+];
 
 const setupChart = () => {
   if (
@@ -59,8 +83,6 @@ const setupChart = () => {
     !volumeData.value.length
   )
     return;
-
-  console.log(chartData.value);
   chart.value = $charts.createChart(
     chartContainer.value,
     chartOptions as ChartOptions,
@@ -95,12 +117,45 @@ const updateChartData = async () => {
   try {
     const newData = await fetchLatestBinanceData();
     if (newData) {
-      candlestickSeries.value.update(newData.candlestick);
-      volumeSeries.value.update(newData.volume);
+      if (candlestickSeries.value) {
+        candlestickSeries.value.update(newData.candlestick);
+      }
+
+      if (volumeSeries.value) {
+        volumeSeries.value.update(newData.volume);
+      }
     }
   } catch (err) {
     console.error("Error updating chart data:", err);
   }
+};
+
+// Generate random colors for the lines
+const getRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};
+
+// Draw a new line series
+const drawNewLineSeries = () => {
+  const newLineSeries1 = chart.value.addLineSeries({ color: getRandomColor() });
+  const newLineSeries2 = chart.value.addLineSeries({ color: getRandomColor() });
+
+  newLineSeries1.setData(data1);
+  newLineSeries2.setData(data2);
+  lineSeriesList.value.push(newLineSeries1, newLineSeries2);
+};
+
+// Clear all line series
+const resetAllLineSeries = () => {
+  lineSeriesList.value.forEach((lineSeries) => {
+    chart.value.removeSeries(lineSeries);
+  });
+  lineSeriesList.value = [];
 };
 
 watch([symbol, interval], async () => {
@@ -111,7 +166,6 @@ watch([symbol, interval], async () => {
 onMounted(async () => {
   await fetchBinanceData();
   setupChart();
-
   updateInterval = window.setInterval(updateChartData, 1000);
 });
 
