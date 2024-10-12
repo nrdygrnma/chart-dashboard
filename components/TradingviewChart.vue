@@ -18,6 +18,7 @@
         <option value="1M">1 Month</option>
       </select>
     </div>
+
     <div
       v-if="!isLoading && !error"
       ref="chartContainer"
